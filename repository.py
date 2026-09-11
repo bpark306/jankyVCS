@@ -90,3 +90,23 @@ class GitRepository (object) :
 
         return ret
 
+    def has_git_dir(path):
+        return os.path.isdir(os.path.join(path, ".git"))
+
+    def repo_find(path=".", required=True):
+
+        path = os.path.realpath(path)
+        
+        while not has_git_dir(path):
+            parent = os.path.realpath(os.path.join(path, ".."))
+
+            if parent == path:
+                if required:
+                 raise Exception("No git directory")
+                else:
+                    return None
+
+            path = parent
+        
+        return GitRepository(path)
+
