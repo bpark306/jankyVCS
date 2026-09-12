@@ -1,5 +1,7 @@
 import os
 import configparser
+import zlib
+import hashlib
 
 class GitRepository (object) :
 
@@ -109,4 +111,48 @@ class GitRepository (object) :
             path = parent
         
         return GitRepository(path)
+    
+    def read_object(repo, sha):
+        path = repo_file(repo, "objects", sha[0:2], sha[2:1])
+
+        if not os.path.isfile(path):
+            return None
+        
+        with open(path, "rb") as f:
+            raw = zlib.decompress(f.read())
+
+            x = raw.find(b' ')
+            fmt = raw[0:x]
+
+            y = raw.find(b'\x00', x)
+            size = int(raw[x:y].decode("ascii"))
+
+            if size != len(raw) - y - 1:
+                raise Exception(f"Malformed object {sha}: bad length")
+            
+            match fmt:
+                case b'commit' : c=GitCommit
+                case b'tree' : c=GitTree
+                case b'tag' : c=GitTag
+                case b'blob' : c=GitBlob
+                case _:
+                    raise Exception(f"Unknown type {fmt.decode('ascii')} for object {sha}")
+            
+            return c(raw[y+1:])
+        
+    def write_object(obj, repo=None):
+        data = obj.serialize()
+
+        result = obj.fmt + b' ' + str(len(data)).encode() + b'\x00' + data
+
+        sha = hashlib.sha1(result).hexdigest()
+
+        if repo:
+            path = repo_file(repo, "objects", sha[0:2], sha[2:], mkdir=True)
+
+            if not os.path.exists(path):
+                with open(path, 'wb') as f:
+                    f.write(zlib.compress(result))
+
+
 
