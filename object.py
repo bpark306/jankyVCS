@@ -1,6 +1,6 @@
 class GitObject(object):
     def __init__(self, data=None):
-        if data != none:
+        if data is not None:
             self.deserialize(data)
         else:
             self.init()
@@ -11,5 +11,14 @@ class GitObject(object):
     def deserialize(self, repo):
         raise Exception("Unimplemented")
     
-    def init():
+    def init(self):
         pass
+
+class GitBlob(GitObject):
+    fmt = b'blob'
+
+    def serialize(self):
+        return self.blobdata
+    
+    def deserialize(self, data):
+        self.blobdata = data

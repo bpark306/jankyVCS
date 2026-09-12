@@ -26,7 +26,7 @@ class GitRepository (object) :
             raise Exception("Configuration file missing")
         
         if not force:
-            vers = int(self.conf.get("core", "repositoryformationversion"))
+            vers = int(self.conf.get("core", "repositoryformatversion"))
             if vers !=0:
                 raise Exception(f"Unsupported repositoryformationversion: {vers}")
     
@@ -92,14 +92,16 @@ class GitRepository (object) :
 
         return ret
 
+    @staticmethod
     def has_git_dir(path):
         return os.path.isdir(os.path.join(path, ".git"))
 
+    @staticmethod
     def repo_find(path=".", required=True):
 
         path = os.path.realpath(path)
         
-        while not has_git_dir(path):
+        while not GitRepository.has_git_dir(path):
             parent = os.path.realpath(os.path.join(path, ".."))
 
             if parent == path:
@@ -112,8 +114,9 @@ class GitRepository (object) :
         
         return GitRepository(path)
     
+    @staticmethod
     def read_object(repo, sha):
-        path = repo_file(repo, "objects", sha[0:2], sha[2:1])
+        path = repo.repo_file("objects", sha[0:2], sha[2:])
 
         if not os.path.isfile(path):
             return None
@@ -131,15 +134,16 @@ class GitRepository (object) :
                 raise Exception(f"Malformed object {sha}: bad length")
             
             match fmt:
-                case b'commit' : c=GitCommit
-                case b'tree' : c=GitTree
-                case b'tag' : c=GitTag
-                case b'blob' : c=GitBlob
+                case b'commit'  : c=GitCommit
+                case b'tree'    : c=GitTree
+                case b'tag'     : c=GitTag
+                case b'blob'    : c=GitBlob
                 case _:
                     raise Exception(f"Unknown type {fmt.decode('ascii')} for object {sha}")
             
             return c(raw[y+1:])
         
+    @staticmethod
     def write_object(obj, repo=None):
         data = obj.serialize()
 
@@ -148,11 +152,17 @@ class GitRepository (object) :
         sha = hashlib.sha1(result).hexdigest()
 
         if repo:
-            path = repo_file(repo, "objects", sha[0:2], sha[2:], mkdir=True)
+            path = repo.repo_file("objects", sha[0:2], sha[2:], mkdir=True)
 
             if not os.path.exists(path):
                 with open(path, 'wb') as f:
                     f.write(zlib.compress(result))
 
+        return sha
 
+    @staticmethod
+    def find_object(repo, name, fmt=None, follow=True):
+        return name
+
+    
 
