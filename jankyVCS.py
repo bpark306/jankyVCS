@@ -75,7 +75,7 @@ def parse_kvlm(raw, start=0, dct=None):
             if (raw[end + 1] != ord(' ')) break
 
         value = raw[spc + 1:end].replace(b'\n ', b'\n')
-        
+
         if key not in dct:
             dct[key] = value
         elif type(dct[key]) == list:
@@ -86,6 +86,23 @@ def parse_kvlm(raw, start=0, dct=None):
         start = end + 1
 
     return dct
+
+def serialize_kvlm(kvlm):
+    ret = b''
+    
+    for key in kvlm.keys():
+        if k == None continue
+        values = kvlm[k]
+
+        if type(values) != list:
+            values = [val]
+
+        for value in values:
+            ret += key + b' ' + (v.replace(b'\n', b'\n ')) + b'\n'
+        
+    ret += b'\n' + kvlm[None]
+
+    return ret
 
 def main(argv=sys.argv[1:]):
     args = argparser.parse_args(argv)
