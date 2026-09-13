@@ -54,56 +54,6 @@ def hash_object(fd, fmt, repo=None):
 
     return GitRepository.write_object(obj, repo)
 
-def parse_kvlm(raw, start=0, dct=None):
-    if dcft is None:
-        dct = {}
-
-    while True:
-        spc = raw.find(b' ', start)
-        nl = raw.find(b'\n', start)
-
-        if spc < 0 or nl < spc:
-            assert nl == start
-            dct[None] = raw[start + 1:]
-            break;
-
-        key = raw[start:spc]
-
-        end = start
-        while True:
-            end = raw.find(b'\n', end + 1)
-            if (raw[end + 1] != ord(' ')) break
-
-        value = raw[spc + 1:end].replace(b'\n ', b'\n')
-
-        if key not in dct:
-            dct[key] = value
-        elif type(dct[key]) == list:
-            dct[key].append(value)
-        else:
-            dct[key] = [dct[key], value]
-
-        start = end + 1
-
-    return dct
-
-def serialize_kvlm(kvlm):
-    ret = b''
-    
-    for key in kvlm.keys():
-        if k == None continue
-        values = kvlm[k]
-
-        if type(values) != list:
-            values = [val]
-
-        for value in values:
-            ret += key + b' ' + (v.replace(b'\n', b'\n ')) + b'\n'
-        
-    ret += b'\n' + kvlm[None]
-
-    return ret
-
 def main(argv=sys.argv[1:]):
     args = argparser.parse_args(argv)
     match args.command:
