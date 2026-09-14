@@ -59,7 +59,7 @@ class GitCommit(GitObject):
 
             if key not in dct:
                 dct[key] = value
-            elif type(dct[key]) == list:
+            elif isinstance(dct[key], list):
                 dct[key].append(value)
             else:
                 dct[key] = [dct[key], value]
@@ -75,7 +75,7 @@ class GitCommit(GitObject):
             if k == None continue
             values = kvlm[k]
 
-            if type(values) != list:
+            if not isinstance(values, list):
                 values = [val]
 
             for value in values:

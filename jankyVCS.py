@@ -54,6 +54,51 @@ def hash_object(fd, fmt, repo=None):
 
     return GitRepository.write_object(obj, repo)
 
+def cmd_log(args):
+    repo = GitRepository.repo_find()
+    print("digraph jankyVCS{")
+    print("  node[shape=rect]")
+    log_graphviz(repo, object_find(repo, args.commit))
+    print("}")
+
+
+def log_graphviz(repo, sha):
+    seen = set()
+    stack = sha if isinstance(sha,list) else [sha]
+
+    while stack:
+        curr_sha = stack.pop()
+
+        if curr_sha in seen:
+            continue
+
+        seen.add(curr_sha)
+
+        commit = GitRepository.read_object(repo, curr_sha)
+
+        msg = commit.kvlm[None].decode("utf8").strip()
+        msg = msg.replace("\\", "\\\\")
+        msg = msg.replace("\"", "\\\"")
+
+        if "\n" in msg:
+            msg = msg[:msg.index("\n")]
+
+        print(f"    c_{curr_sha} [label=\"{curr_sha[0:7]}: {msg}\"]")
+        assert commit.fmt == b'commit'
+
+        if b'parent' not in commit.kvlm:
+            continue
+
+        parents = commit.kvlm[b'parent']
+
+        if not isinstance(parents, list):
+            parents = [parents]
+
+        for parent in reversed(parents):
+            parent = parent.decode("ascii")
+            print(f" c_{curr_sha} -> c_{parent};")
+            stack.append(parent)
+
 def main(argv=sys.argv[1:]):
     args = argparser.parse_args(argv)
     match args.command:
@@ -65,6 +110,9 @@ def main(argv=sys.argv[1:]):
         case "hash-object"  : cmd_hash_object(args)
         case "log"          : cmd_log(args)
         case _ : print("Unknown command. Type --help for list of valid commands")
+
+
+
 
 argsp = argsubparsers.add_parser("init", help="Initialize a new, empty repository.")
 
@@ -102,4 +150,11 @@ argsp.add_argument("-w",
 
 argsp.add_argument("path",
                     help="Read object from <file>")
+
+argsp = argsubparsers.add_parser("log", help="Display history of given commit.")
+arsp.add_argument("commit",
+                    default="HEAD",
+                    nargs="?",
+                    help="Commit to start at.")
+
 
