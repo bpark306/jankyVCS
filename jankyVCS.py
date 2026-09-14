@@ -61,7 +61,6 @@ def cmd_log(args):
     log_graphviz(repo, object_find(repo, args.commit))
     print("}")
 
-
 def log_graphviz(repo, sha):
     seen = set()
     stack = sha if isinstance(sha,list) else [sha]
